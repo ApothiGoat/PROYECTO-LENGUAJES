@@ -10,10 +10,17 @@ class TuringMachine:
         self.state = 'q0'
         self.direction = 'right'  # Dirección inicial
         
-    def initialize_tapes(self, input_string):
-        # Inicializar las cintas con símbolos en posiciones pares e impares
-        self.tape1 = ['B'] + [input_string[i] for i in range(0, len(input_string), 2)] + ['B']
-        self.tape2 = ['B'] + [input_string[i] for i in range(1, len(input_string), 2)] + ['B']
+    def initialize_tapes(self, input_string, direction='left_to_right'):
+        if direction == 'left_to_right':
+            # Inicialización de izquierda a derecha
+            self.tape1 = ['B'] + [input_string[i] for i in range(0, len(input_string), 2)] + ['B']
+            self.tape2 = ['B'] + [input_string[i] for i in range(1, len(input_string), 2)] + ['B']
+        else:
+            # Inicialización de derecha a izquierda
+            reversed_string = input_string[::-1]  # Invertir la cadena
+            self.tape1 = ['B'] + [reversed_string[i] for i in range(0, len(reversed_string), 2)] + ['B']
+            self.tape2 = ['B'] + [reversed_string[i] for i in range(1, len(reversed_string), 2)] + ['B']
+        
         self.head1 = 1
         self.head2 = 1
         
@@ -53,8 +60,8 @@ class TuringMachine:
         }
         return transitions.get(current_state, {}).get((symbol1, symbol2), None)
 
-    def run(self, input_string):
-        self.initialize_tapes(input_string)
+    def run(self, input_string, direction='left_to_right'):
+        self.initialize_tapes(input_string, direction)
         steps = []
         
         while self.state != 'qf':
@@ -64,7 +71,8 @@ class TuringMachine:
                 'tape2': self.tape2.copy(),
                 'head1': self.head1,
                 'head2': self.head2,
-                'direction': self.direction
+                'direction': self.direction,
+                'reading_direction': direction
             }
             steps.append(current_config)
             
@@ -195,9 +203,6 @@ def generarTabla(mensaje):
     print('Tabla de transiciones original:')
     for r in tabla:
         print(' '.join(map(str,r)))
-    print('\nPila de errores\n')
-    for z in pilaErrores:
-        print(z)
 
     return pilaErrores
 
@@ -268,16 +273,28 @@ def main():
                 print('\nGenerando árbol de derivación...')
                 generar_arbol_derivacion(cadena, numero)
                 
-                # Procesar con la máquina de Turing
-                print('\nProcesando con Máquina de Turing de 2 cintas:')
+                # Procesar con la máquina de Turing (izquierda a derecha)
+                print('\nProcesando con Máquina de Turing de 2 cintas (Izquierda a Derecha):')
                 tm = TuringMachine()
-                steps = tm.run(cadena)
+                steps = tm.run(cadena, 'left_to_right')
                 
-                # Mostrar los pasos de la ejecución de la máquina de Turing
-                print("\nPasos de ejecución de la Máquina de Turing:")
+                print("\nPasos de ejecución de la Máquina de Turing (Izquierda a Derecha):")
                 for step in steps:
                     print(f"\nEstado: {step['state']}")
-                    print(f"Dirección: {step['direction']}")
+                    print(f"Dirección de lectura: Izquierda a Derecha")
+                    print(f"Dirección de movimiento: {step['direction']}")
+                    print_tapes(step['tape1'], step['tape2'], step['head1'], step['head2'])
+                
+                # Procesar con la máquina de Turing (derecha a izquierda)
+                print('\nProcesando con Máquina de Turing de 2 cintas (Derecha a Izquierda):')
+                tm = TuringMachine()
+                steps = tm.run(cadena, 'right_to_left')
+                
+                print("\nPasos de ejecución de la Máquina de Turing (Derecha a Izquierda):")
+                for step in steps:
+                    print(f"\nEstado: {step['state']}")
+                    print(f"Dirección de lectura: Derecha a Izquierda")
+                    print(f"Dirección de movimiento: {step['direction']}")
                     print_tapes(step['tape1'], step['tape2'], step['head1'], step['head2'])
                 
     except FileNotFoundError:
